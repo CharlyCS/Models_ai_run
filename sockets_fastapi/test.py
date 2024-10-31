@@ -9,7 +9,7 @@ import os
 from langchain_openai import ChatOpenAI
 from fastapi import FastAPI, WebSocket
 from fastapi.responses import StreamingResponse, FileResponse
-from langchain_core.runnables import RunnablePassthrough
+from langchain_core.runnables import RunnablePassthrough    
 from langchain_core.prompts import ChatPromptTemplate, PromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain.chains import RetrievalQA
@@ -21,7 +21,7 @@ load_dotenv()
 
 openai_api_key = os.environ.get("OPENAI_API_KEY")
 uri = "ws://localhost:8080"
-def get_conversational_chain(retriever):
+async def get_conversational_chain(retriever):
     prompt_template = """
     Eres un asistente para tareas de preguntas y respuestas. 
     Responde la pregunta lo más detallado y sobretodo resumido posible, basándose únicamente en el contexto proporcionado. Usa como maximo 250 caracteres.
@@ -87,6 +87,12 @@ async def generate_chat_responses(message):
 async def root():
     return FileResponse("static/index.html")'''
 
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket.accept()
+    while True:
+        data = await websocket.receive_text()
+        await websocket.send_text(f"Message text was: {data}")
 
 @app.get("/chat_stream/{message}")
 async def chat_stream(message: str):
